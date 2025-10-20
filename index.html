@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Watch all seasons of your favorite anime online on Animey Web.">
+  <meta name="keywords" content="anime, streaming, watch online, Food Wars, Naruto, Sanda">
+  <title>Animey Web - Watch All Seasons Online</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1a1a1a; color: #fff; line-height: 1.6;
+      padding: 20px; min-height: 100vh;
+    }
+    h1 { color: yellow; font-weight: bold; margin-bottom: 20px; text-align: center; }
+    .container {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr; gap: 20px;
+    }
+    @media (min-width: 768px) {
+      .container { grid-template-columns: 1fr 400px; }
+    }
+    @media (max-width: 767px) {
+      .container { grid-template-columns: 1fr; }
+      .video-player-container { max-width: 100%; }
+    }
+    .video-player-container {
+      position: sticky; top: 10px; background: #2d2d2d; border-radius: 15px;
+      padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,.3); margin-bottom: 20px;
+      z-index: 100; max-width: 100%; transition: transform 0.3s ease;
+    }
+    @media (max-width: 480px) {
+      .video-player-container { padding: 10px; top: 5px; }
+      .player-header { flex-direction: column; align-items: flex-start; }
+      .close-btn { margin-top: 10px; align-self: flex-end; }
+    }
+    .player-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+    }
+    .player-title { font-size: 18px; font-weight: bold; color: #ff4444; }
+    .close-btn {
+      background: #ff4444; color: white; border: none;
+      padding: 8px 12px; border-radius: 5px; cursor: pointer;
+      font-size: 14px; transition: background 0.3s;
+    }
+    .close-btn:hover { background: #cc0000; }
+    .video-player video {
+      width: 100%; height: auto; border-radius: 10px; background: #000;
+    }
+    .video-loading {
+      display: none; text-align: center; padding: 20px; color: #ffcc00;
+    }
+    .content-area { background: #2d2d2d; border-radius: 15px; padding: 20px; }
+    .image-placeholder {
+      text-align: center; margin: 20px 0; padding: 1px;
+      background: linear-gradient(135deg, #333, #555);
+      border: 2px dashed #666; border-radius: 10px; color: #ccc;
+    }
+    .series-section {
+      background: #3a3a3a; margin: 25px 0; border-radius: 12px;
+      overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,.2);
+    }
+    .series-title {
+      background: linear-gradient(135deg, #ff4444, #cc0000); color: white;
+      padding: 18px 25px; font-weight: bold; font-size: 20px; cursor: pointer;
+    }
+    .series-content { display: none; padding: 15px; background: #2d2d2d; border-radius: 8px; }
+    .series-content.show { display: block; }
+    .episodes-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px; padding: 15px;
+    }
+    @media (max-width: 480px) {
+      .episodes-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    }
+    .episode {
+      background: #4a4a4a; padding: 15px; border-radius: 8px; cursor: pointer;
+      text-align: center; transition: all 0.3s ease; border: 2px solid transparent;
+      position: relative;
+    }
+    .episode:hover {
+      background: #5a5a5a; transform: translateY(-3px);
+      border-color: #ff4444; box-shadow: 0 4px 12px rgba(255,68,68,.3);
+    }
+    .episode.active {
+      background: #ff4444; border-color: #ff4444; transform: scale(1.05);
+    }
+    .episode-number { font-size: 15px; color: #ccc; margin-bottom: 5px; }
+    .episode-title { font-size: 17px; font-weight: bold; }
+    .no-episodes {
+      text-align: center; padding: 15px; color: #ffcc00; font-size: 16px; font-style: italic;
+    }
+    .season-box {
+      background: white; color: black; padding: 10px; text-align: center;
+      font-size: 16px; font-weight: bold; margin-bottom: 10px; border-radius: 5px;
+    }
+    footer {
+      width: 100%; background: linear-gradient(135deg, #1f1f1f, #2c2c2c);
+      color: #ddd; text-align: center; padding: 15px 0;
+      font-size: 14px; letter-spacing: 0.5px; border-top: 1px solid #ff4444;
+    }
+    footer a { color: #ffcc00; text-decoration: none; margin: 0 5px; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h6><center>All Web In Hindi</center></h6>
+  <h1>Animey Web</h1>
+  <div class="image-placeholder">
+    <img src="https://i.ibb.co/fdZ0DcSF/58130.jpg" alt="Animey Web Banner" style="width:100%;border-radius:10px;" loading="lazy">
+  </div>
+  <div class="container">
+    <div class="video-player-container" id="videoPlayerContainer" style="display:none;">
+      <div class="player-header">
+        <div class="player-title" id="currentEpisodeTitle">Now Playing</div>
+        <button class="close-btn" onclick="hideVideoPlayer()">Close</button>
+      </div>
+      <div class="video-player">
+        <div class="video-loading" id="videoLoading">Loading video...</div>
+        <video controls playsinline id="currentVideo" preload="metadata" onloadstart="showLoading()" oncanplay="hideLoading()">
+          Your browser does not support HTML5 video.
+        </video>
+      </div>
+    </div>
+    <div class="content-area" id="animeContent">
+      <div id="series"></div>
+    </div>
+  </div>
+  <br><br><br>
+  <footer>
+    © 2025 Muhammad Fahad | Designed with ❤️ | <a href="#">Privacy Policy</a> | <a href="#">Contact</a> | <span style="color:#ffcc00">Note: Please use legal sources for streaming.</span>
+  </footer>
+
+  <script>
+    const seriesData = [
+      {
+        name: "Food Wars (2015) in Hindi",
+        poster: "https://m.media-amazon.com/images/M/MV5BMzNmOGY2ZTEtMDNlYi00MWYxLTk2NjctNWIzYjUyMDQ5ZjY1XkEyXkFqcGc@._V1_.jpg",
+        seasons: [
+          {
+            season: "Season 1",
+            episodes: [
+              { episode: "", title: "Episode 1", url: "https://pixeldrain.dev/api/file/UtALKaWL?download" },
+              { episode: "", title: "Episode 2", url: "https://pixeldrain.dev/api/file/osSUir9t?download" },
+              { episode: "", title: "Episode 3", url: "https://pixeldrain.dev/api/file/JfG8X5RN?download" },
+              { episode: "", title: "Episode 4", url: "https://pixeldrain.dev/api/file/ANx4qPQn?download" },
+              { episode: "", title: "Episode 5", url: "https://pixeldrain.dev/api/file/y4py4kLe?download" },
+              { episode: "", title: "Episode 6", url: "https://pixeldrain.dev/api/file/5fFcTN4b?download" },
+              { episode: "", title: "Episode 7", url: "https://pixeldrain.dev/api/file/bFAgEBVF?download" },
+              { episode: "", title: "Episode 8", url: "https://pixeldrain.dev/api/file/9GWfQegj?download" },
+              { episode: "", title: "Episode 9", url: "https://pixeldrain.dev/api/file/2oSJPzHK?download" },
+              { episode: "", title: "Episode 10", url: "https://pixeldrain.dev/api/file/frWpdAzS?download" },
+              { episode: "", title: "Episode 11", url: "https://pixeldrain.dev/api/file/QLiG4Uv5?download" },
+              { episode: "", title: "Episode 12", url: "https://pixeldrain.dev/api/file/ToajBinw?download" },
+              { episode: "", title: "Episode 13", url: "https://pixeldrain.dev/api/file/6VQ3XPaJ?download" },
+              { episode: "", title: "Episode 14", url: "https://pixeldrain.dev/api/file/MbuoVcit?download" },
+              { episode: "", title: "Episode 15", url: "https://pixeldrain.dev/api/file/Zkhf8yvS?download" },
+              { episode: "", title: "Episode 16", url: "https://pixeldrain.dev/api/file/5PHvSuNf?download" },
+              { episode: "", title: "Episode 17", url: "https://pixeldrain.dev/api/file/1T7EpkAS?download" },
+              { episode: "", title: "Episode 18", url: "https://pixeldrain.dev/api/file/fkTdU8Wy?download" },
+              { episode: "", title: "Episode 19", url: "https://pixeldrain.dev/api/file/vvdQ18dh?download" },
+              { episode: "", title: "Episode 20", url: "https://pixeldrain.dev/api/file/g8NdJ5bv?download" },
+              { episode: "", title: "Episode 21", url: "https://pixeldrain.dev/api/file/AKEsWFay?download" },
+              { episode: "", title: "Episode 22", url: "https://pixeldrain.dev/api/file/U62kFDVP?download" },
+            ]
+          },
+          {
+            season: "Season 2",
+            episodes: []
+          }
+        ]
+      },
+      {
+        name: "Naruto (2007) In Hindi",
+        poster: "https://m.media-amazon.com/images/M/MV5BNTk3MDA1ZjAtNTRhYS00YzNiLTgwOGEtYWRmYTQ3NjA0NTAwXkEyXkFqcGc@._V1_.jpg",
+        seasons: [
+          {
+            season: "Season 1",
+            episodes: [
+              { episode: "", title: "Episode 1", url: "https://pixeldrain.dev/api/file/qWyPHruc?download" }
+            ]
+          }
+        ]
+      },
+      {
+        name: "Sanda (2025) In Hindi",
+        poster: "https://m.media-amazon.com/images/M/MV5BMmRiZmIwNDEtZjM0YS00ZWJjLWJiY2UtNGE4MDgyOTgzZmZkXkEyXkFqcGc@._V1_.jpg",
+        seasons: [
+          {
+            season: "Season 1",
+            episodes: [
+              { episode: "S1E1", title: "Episode 1", url: "https://pixeldrain.dev/api/file/3dZRDbBt?download" }
+            ]
+          },
+          {
+            season: "Season 2",
+            episodes: []
+          }
+        ]
+      }
+    ];
+
+    let currentPlayingVideo = null;
+    let currentActiveEpisode = null;
+
+    function renderSeries() {
+      const seriesContainer = document.getElementById('series');
+      let html = '';
+      seriesData.forEach(series => {
+        html += `
+          <div class="series-section">
+            <div class="series-title" onclick="toggleSeries(this)">${series.name}</div>
+            <div class="series-content">
+              <div class="image-placeholder">
+                <img src="${series.poster}" alt="${series.name} Poster" style="width:100%;border-radius:10px;" loading="lazy">
+              </div>
+              ${series.seasons.map(season => `
+                <div class="season-box">${season.season}</div>
+                <div class="episodes-grid">
+                  ${season.episodes.length > 0 ? 
+                    season.episodes.map(episode => `
+                      <div class="episode" onclick="playEpisode(this, '${episode.url}', '${series.name}: ${season.season} ${episode.title}', '${episode.episode}')">
+                        <div class="episode-number">${episode.episode}</div>
+                        <div class="episode-title">${episode.title}</div>
+                      </div>
+                    `).join('') : 
+                    '<div class="no-episodes">No Episodes Added Yet</div>'}
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+      seriesContainer.innerHTML = html;
+    }
+
+    function toggleSeries(title) {
+      const content = title.nextElementSibling;
+      content.classList.toggle('show');
+    }
+
+    function playEpisode(episodeElement, videoUrl, episodeTitle, episode) {
+      if (currentPlayingVideo) {
+        currentPlayingVideo.pause();
+        currentPlayingVideo.currentTime = 0;
+      }
+      if (currentActiveEpisode) {
+        currentActiveEpisode.classList.remove('active');
+      }
+      episodeElement.classList.add('active');
+      currentActiveEpisode = episodeElement;
+      const videoPlayerContainer = document.getElementById('videoPlayerContainer');
+      const videoElement = document.getElementById('currentVideo');
+      const titleElement = document.getElementById('currentEpisodeTitle');
+      titleElement.textContent = episodeTitle;
+
+      if (videoUrl && videoUrl !== '#') {
+        showLoading();
+        videoElement.src = videoUrl;
+        videoPlayerContainer.style.display = 'block';
+        videoElement.load();
+        videoElement.play().catch(() => {
+          alert('Error loading video. Please try another episode or check your connection.');
+          hideVideoPlayer();
+        });
+        currentPlayingVideo = videoElement;
+      } else {
+        alert('This episode is currently unavailable. Please try another episode.');
+      }
+    }
+
+    function hideVideoPlayer() {
+      const video = document.getElementById('currentVideo');
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
+      if (currentActiveEpisode) {
+        currentActiveEpisode.classList.remove('active');
+        currentActiveEpisode = null;
+      }
+      document.getElementById('videoPlayerContainer').style.display = 'none';
+    }
+
+    function showLoading() {
+      document.getElementById('videoLoading').style.display = 'block';
+    }
+
+    function hideLoading() {
+      document.getElementById('videoLoading').style.display = 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderSeries();
+      document.addEventListener('keydown', (e) => {
+        if (currentPlayingVideo) {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            currentPlayingVideo.paused ? currentPlayingVideo.play() : currentPlayingVideo.pause();
+          } else if (e.code === 'ArrowRight') {
+            currentPlayingVideo.currentTime += 10;
+          } else if (e.code === 'ArrowLeft') {
+            currentPlayingVideo.currentTime -= 10;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
